@@ -3,15 +3,23 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class History {
-  late final File _historyFile;
-  List<String> parsedFile = [];
 
-  History() {
-    _loadFile();
+  Future<List<String>> readFile() async {
+    final file = await loadFile();
+    return file.readAsLinesSync();
   }
 
-  void _loadFile() async {
-    _historyFile = File((await getApplicationSupportDirectory()).path+"/history.txt");
-    parsedFile = await _historyFile.readAsLines();
+  Future<File> loadFile() async {
+    final path = (await getApplicationSupportDirectory()).path+"/history.txt";
+    final file = File(path);
+    if (!file.existsSync()) {
+      file.create();
+    }
+    return file;
+  }
+
+  clearFile() async{
+    final file = await loadFile();
+    file.writeAsString("");
   }
 }

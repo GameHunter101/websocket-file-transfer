@@ -11,12 +11,13 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  late final History history;
+  final _history = History();
+  
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    history = History();
   }
 
   @override
@@ -24,67 +25,61 @@ class _HistoryPageState extends State<HistoryPage> {
     var theme = Theme.of(context);
     var headerStyle = theme.textTheme.displayMedium!
         .copyWith(color: theme.colorScheme.onPrimaryContainer);
-    return Builder(builder: (context) {
-      return Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Text(
-              "History",
-              style: headerStyle,
-            ),
-          ),
-          Expanded(
-            child: RawScrollbar(
-              thumbColor: theme.colorScheme.secondary,
-              radius: Radius.circular(20),
-              thickness: 5,
-              child: history.parsedFile.length > 0
-                  ? ListView.builder(
-                      itemCount: history.parsedFile.length,
-                      itemBuilder: (context, i) {
-                        return ListTile(
-                          leading: Icon(
-                              history.parsedFile[i].contains("file") == 0
-                                  ? Icons.insert_drive_file_outlined
-                                  : Icons.textsms_outlined),
-                          title: Text(history.parsedFile[i]),
-                        );
-                      },
+    return FutureBuilder(
+      future: _history.readFile(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  "History",
+                  style: headerStyle,
+                ),
+              ),
+              snapshot.data!.length > 0
+                  ? Expanded(
+                      child: RawScrollbar(
+                        thumbColor: theme.colorScheme.secondary,
+                        radius: Radius.circular(20),
+                        thickness: 5,
+                        controller: _scrollController,
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                          child: ListView.builder(
+                            controller: _scrollController,
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, i) {
+                              return ListTile(
+                                leading: Icon(
+                                    snapshot.data![i].contains("file") == 0
+                                        ? Icons.insert_drive_file_outlined
+                                        : Icons.textsms_outlined),
+                                title: Text(snapshot.data![i]),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     )
-                  : Text("no history"),
-            ),
-          ),
-        ],
-      );
-    });
+                  : Text("No history"),
+              if (snapshot.data!.length > 0)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20,left: 10,right: 10,top: 10),
+                  child: ElevatedButton.icon(
+                    onPressed: _history.clearFile,
+                    icon: Icon(Icons.delete_outline),
+                    label: Text("Clear History"),
+                  ),
+                ),
+            ],
+          );
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
+    );
   }
 }
-/* Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text("History", style: headerStyle),
-          ),
-          ListView(
-            children: [
-              for (var i = 0; i < 500; i++)
-              ListTile(
-                leading: Icon(i%2==0?Icons.insert_drive_file_outlined:Icons.textsms_outlined),
-                title: Text(i%2==0?"file":"text"),
-              )
-            ],
-          ),
-          ElevatedButton(
-              onPressed: () async {
-                final path = (await getApplicationSupportDirectory()).path;
-                File file = File("$path/history.json");
-                file.delete();
-                //   print("${await file.exists()}, ${file.path}");
-              },
-              child: Text("stuff"))
-        ],
-      ));
-    }); */
