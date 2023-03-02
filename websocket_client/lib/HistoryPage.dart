@@ -12,12 +12,17 @@ class HistoryPage extends StatefulWidget {
 
 class _HistoryPageState extends State<HistoryPage> {
   final _history = History();
-  
+  int _length = 0;
+
   final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    Future.delayed(Duration.zero, () async {
+      _length = (await _history.readFile()).length;
+      setState(() {});
+    });
   }
 
   @override
@@ -31,6 +36,7 @@ class _HistoryPageState extends State<HistoryPage> {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasData) {
           return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.all(10),
@@ -47,7 +53,8 @@ class _HistoryPageState extends State<HistoryPage> {
                         thickness: 5,
                         controller: _scrollController,
                         child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                          behavior: ScrollConfiguration.of(context)
+                              .copyWith(scrollbars: false),
                           child: ListView.builder(
                             controller: _scrollController,
                             itemCount: snapshot.data!.length,
@@ -67,9 +74,15 @@ class _HistoryPageState extends State<HistoryPage> {
                   : Text("No history"),
               if (snapshot.data!.length > 0)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 20,left: 10,right: 10,top: 10),
+                  padding: const EdgeInsets.only(
+                      bottom: 20, left: 10, right: 10, top: 10),
                   child: ElevatedButton.icon(
-                    onPressed: _history.clearFile,
+                    onPressed: () {
+                      _history.clearFile();
+                      setState(() {
+                        _length = 0;
+                      });
+                    },
                     icon: Icon(Icons.delete_outline),
                     label: Text("Clear History"),
                   ),

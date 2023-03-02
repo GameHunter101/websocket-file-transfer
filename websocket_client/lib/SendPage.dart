@@ -5,7 +5,7 @@ import "package:file_picker/file_picker.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:websocket_client/main.dart";
-import "package:websocket_client/ws.dart";
+import 'package:websocket_client/websocketClient.dart';
 
 class SendPage extends StatefulWidget {
   @override
@@ -15,7 +15,7 @@ class SendPage extends StatefulWidget {
 class _SendPageState extends State<SendPage> {
   var fileTransfer = true;
   var fileData = new Uint8List(0);
-  late final WebSocketGen webSocket;
+  late final WebSocketClient webSocket;
   Map<String, String> fileMetaData = {};
 
   final textFormController = TextEditingController();
@@ -23,7 +23,7 @@ class _SendPageState extends State<SendPage> {
   @override
   void initState() {
     super.initState();
-    webSocket = WebSocketGen("ws://192.168.1.16:60116");
+    webSocket = WebSocketClient("ws://192.168.1.16:60116");
   }
 
   @override

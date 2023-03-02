@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:websocket_client/HistoryPage.dart";
+import "package:websocket_client/ReceivePage.dart";
 
 import "SendPage.dart";
 
@@ -123,16 +124,5 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     });
-  }
-}
-
-class ReceivePage extends StatelessWidget {
-  const ReceivePage({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Text("Receive");
   }
 }

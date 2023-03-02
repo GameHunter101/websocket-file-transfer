@@ -5,9 +5,9 @@ import "dart:typed_data";
 import "package:path_provider/path_provider.dart";
 import "package:web_socket_channel/web_socket_channel.dart";
 
-class WebSocketGen {
+class WebSocketClient {
   late WebSocketChannel _channel;
-  WebSocketGen(String url)
+  WebSocketClient(String url)
       : _channel = WebSocketChannel.connect(Uri.parse(url));
 
   void sendText(String message) {
