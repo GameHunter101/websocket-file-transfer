@@ -19,6 +19,9 @@ dependencies:
   web_socket_channel: ^2.3.0
   connectivity_plus: ^3.0.3
   data_connection_checker: ^0.3.4
+  shelf_web_socket: ^1.0.3
+  shelf: ^1.4.0
+  universal_html: ^2.0.9
 
 dev_dependencies:
   flutter_test:
