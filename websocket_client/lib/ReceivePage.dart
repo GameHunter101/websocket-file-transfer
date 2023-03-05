@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:websocket_client/websocketServer.dart';
+import 'package:flutter/material.dart';
 
 class ReceivePage extends StatefulWidget {
   const ReceivePage({
@@ -14,6 +14,12 @@ class _ReceivePageState extends State<ReceivePage> {
   final websocketServer = WebSocketServer();
 
   @override
+  void dispose() {
+    super.dispose();
+    websocketServer.closeServer();
+  }
+
+  @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var headerStyle = theme.textTheme.displayMedium!
@@ -26,6 +32,7 @@ class _ReceivePageState extends State<ReceivePage> {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasData) {
           return Column(
+            mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
@@ -36,22 +43,25 @@ class _ReceivePageState extends State<ReceivePage> {
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: 400),
                   child: Padding(
-                    padding: const EdgeInsets.only(
-                        left: 40, right: 40, top: 20, bottom: 20),
-                    child: Row(
+                      padding: const EdgeInsets.only(
+                          left: 40, right: 40, top: 20, bottom: 20),
+                      child: Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              children: [
-                                Text("Ip: ${snapshot.data!.address}", style: infoStyle,),
-                                Text("Port: ${snapshot.data!.port}", style: infoStyle,),
-                              ],
-                            )
-                          ),
-                          
+                              child: Column(
+                            children: [
+                              Text(
+                                "Ip: ${snapshot.data!.address}",
+                                style: infoStyle,
+                              ),
+                              Text(
+                                "Port: ${snapshot.data!.port}",
+                                style: infoStyle,
+                              ),
+                            ],
+                          )),
                         ],
-                      )
-                  ),
+                      )),
                 ),
               ),
             ],

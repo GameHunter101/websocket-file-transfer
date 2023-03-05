@@ -41,12 +41,5 @@ class WebSocketClient {
       currentFileData = "";
     }
     file.writeAsString("$data\n${currentFileData}");
-/*     if (!(await file.exists())) {
-      print("File does not exist");
-      print("creating file...");
-      await file.create();
-    } else {
-      print("file exists");
-    } */
   }
 }

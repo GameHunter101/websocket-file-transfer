@@ -22,6 +22,8 @@ dependencies:
   shelf_web_socket: ^1.0.3
   shelf: ^1.4.0
   universal_html: ^2.0.9
+  shelf_plus: ^1.7.0
+  angel3_framework: ^7.0.3
 
 dev_dependencies:
   flutter_test:
