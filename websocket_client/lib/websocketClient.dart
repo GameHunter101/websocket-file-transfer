@@ -6,12 +6,18 @@ import "package:path_provider/path_provider.dart";
 import "package:web_socket_channel/web_socket_channel.dart";
 
 class WebSocketClient {
-  late WebSocketChannel _channel;
-  WebSocketClient(String url)
-      : _channel = WebSocketChannel.connect(Uri.parse(url));
+  WebSocketChannel? _channel = null;
+
+  Future<void> connect(String ip, String id) async {
+    if (_channel == null) {
+      print("CONNECTING HERE...");
+      _channel = WebSocketChannel.connect(Uri.parse("ws://$ip?id=$id"));
+    }
+    return _channel!.ready;
+  }
 
   void sendText(String message) {
-    _channel.sink.add(message);
+    _channel!.sink.add(message);
     addToHistory("text", message);
   }
 
@@ -22,12 +28,12 @@ class WebSocketClient {
     List<int> metaDataLengthBytes = metadataLength.buffer.asUint8List();
     print(DateTime.now().toIso8601String());
     final encodedFile = metaDataLengthBytes + encodedMetadata + file;
-    _channel.sink.add(encodedFile);
+    _channel!.sink.add(encodedFile);
     addToHistory("file", metadata["name"]!);
   }
 
   void closeSink() {
-    _channel.sink.close();
+    _channel!.sink.close();
   }
 
   void addToHistory(String action, String payload) async {
@@ -41,5 +47,10 @@ class WebSocketClient {
       currentFileData = "";
     }
     file.writeAsString("$data\n${currentFileData}");
+  }
+
+  void sendMessage(dynamic data, Map<String, String> metadata) async {
+    Map<String, dynamic> fullData = Map.from(metadata)..addAll({"data": data});
+    _channel!.sink.add(jsonEncode(fullData));
   }
 }

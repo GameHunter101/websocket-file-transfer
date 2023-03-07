@@ -44,7 +44,8 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class MainState extends ChangeNotifier {}
+class MainState extends ChangeNotifier {
+}
 
 class HomePage extends StatefulWidget {
   @override
@@ -73,45 +74,57 @@ class _HomePageState extends State<HomePage> {
 
     return LayoutBuilder(builder: (context, constraints) {
       return Scaffold(
+        /* appBar: AppBar(
+          centerTitle: true,
+          title: Text("Title"),
+          leadingWidth: 80,
+          leading: IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {},
+          ),
+        ), */
         body: Row(
           children: [
-            SafeArea(
-              child: NavigationRail(
-                backgroundColor: Theme.of(context).colorScheme.background,
-                extended: constraints.maxWidth >= 600,
-                minExtendedWidth: 175,
-                destinations: [
-                  NavigationRailDestination(
-                    icon: Icon(Icons.call_made),
-                    label: Text("Send",
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer)),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.call_received),
-                    label: Text("Receive",
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer)),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.history),
-                    label: Text("History",
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer)),
-                  ),
-                ],
-                selectedIndex: destinationIndex,
-                onDestinationSelected: (value) {
-                  setState(() {
-                    destinationIndex = value;
-                  });
-                },
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: double.infinity),
+              child: SafeArea(
+                child: NavigationRail(
+                  backgroundColor: Theme.of(context).colorScheme.background,
+                  extended: constraints.maxWidth >= 600,
+                  minExtendedWidth: 175,
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.call_made),
+                      label: Text("Send",
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer)),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.call_received),
+                      label: Text("Receive",
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer)),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.history),
+                      label: Text("History",
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer)),
+                    ),
+                  ],
+                  selectedIndex: destinationIndex,
+                  onDestinationSelected: (value) {
+                    setState(() {
+                      destinationIndex = value;
+                    });
+                  },
+                ),
               ),
             ),
             Expanded(

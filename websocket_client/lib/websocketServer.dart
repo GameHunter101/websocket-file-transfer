@@ -1,16 +1,10 @@
 import "dart:async";
+import "dart:convert";
 import "dart:io";
 import "dart:math";
 
-// import "package:shelf/shelf.dart";
-import "package:shelf/shelf_io.dart" as shelf;
-import "package:shelf_web_socket/shelf_web_socket.dart";
-import "package:shelf_plus/shelf_plus.dart";
-// import "package:connectivity_plus/connectivity_plus.dart";
-// import "package:data_connection_checker/data_connection_checker.dart";
-
 class WebSocketServer {
-  late final HttpServer _server;
+  late final HttpServer server;
   String? senderId = null;
   String? senderIp = null;
 
@@ -26,14 +20,9 @@ class WebSocketServer {
     final port = await getOpenPort(_ip);
 
     try {
-      var cascade = Cascade().add(webSocketHandler(_handleWebSocket));
-      // .add(_echoRequest);
+      server = await HttpServer.bind(_ip, port);
 
-      _server = await shelf.serve(cascade.handler, _ip, await getOpenPort(_ip));
-      final server = await HttpServer.bind(_ip, port);
-      print("Serving at ws://${_server.address.host}:${port}");
-
-      server.listen(_handleConnection);
+      // server.listen(_handleConnection);
     } catch (e) {
       print("Server is already initialized, $e");
     }
@@ -47,24 +36,10 @@ class WebSocketServer {
     return port;
   }
 
-  /* FutureOr<void> _handleWebSocket(ws) {
-    print("connected");
-
-    ws.stream.listen((message) {
-      print("Received message from $senderId: $message");
-    }, onDone: () {
-      senderId = null;
-      senderIp = null;
-      print("Client disconnected");
-    });
-    return null;
-  } */
-
-  void _handleConnection(HttpRequest request) async {
+  void handleConnection(HttpRequest request) async {
     senderIp = request.connectionInfo?.remoteAddress.address;
     print("connection!!");
     final params = request.uri.queryParameters;
-    print("${params["id"]}, $senderId, ${params["id"] == senderId}");
     if (params.keys.contains("id") && params["id"] == senderId) {
       if (WebSocketTransformer.isUpgradeRequest(request)) {
         WebSocket webSocket = await WebSocketTransformer.upgrade(request);
@@ -75,14 +50,14 @@ class WebSocketServer {
       }
     } else {
       senderId = _generateId(14);
-      request.response.write("IP: $senderIp, ID: $senderId");
+      request.response.write(senderId);
       request.response.close();
     }
   }
 
   void _handleWebSocket(WebSocket ws) {
     ws.listen((data) {
-      print("Received data: $data");
+      print("Received data: ${jsonDecode(data)}");
       // ws.add("Received: $data");
     }, onDone: () {
       print("User disconnected");
@@ -103,7 +78,7 @@ class WebSocketServer {
   }
 
   void closeServer() {
-    _server.close();
+    server.close();
     print("Server closed");
   }
 }
@@ -114,14 +89,3 @@ class Tuple<X, Y> {
 
   Tuple(this.address, this.port);
 }
-
-/* class WsController extends WebSocketController {
-  WsController(AngelWebSocket ws):super(ws);
-
-  @override
-  void onConnect(WebSocketContext socket) {
-    print("connected!");
-  }
-
-  
-} */
