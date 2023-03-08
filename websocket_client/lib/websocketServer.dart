@@ -38,7 +38,13 @@ class WebSocketServer {
 
   void handleConnection(HttpRequest request) async {
     senderIp = request.connectionInfo?.remoteAddress.address;
-    print("connection!!");
+
+    senderId = _generateId(14);
+    request.response.write(senderId);
+    request.response.close();
+  }
+
+  void upgradeConnection(HttpRequest request) async {
     final params = request.uri.queryParameters;
     if (params.keys.contains("id") && params["id"] == senderId) {
       if (WebSocketTransformer.isUpgradeRequest(request)) {
@@ -49,15 +55,19 @@ class WebSocketServer {
         request.response.close();
       }
     } else {
-      senderId = _generateId(14);
-      request.response.write(senderId);
+      request.response.statusCode = HttpStatus.forbidden;
+      request.response.write("Invalid sender id");
       request.response.close();
     }
   }
 
   void _handleWebSocket(WebSocket ws) {
     ws.listen((data) {
-      print("Received data: ${jsonDecode(data)}");
+      try {
+        print("Received formatted data: ${jsonDecode(data)}");
+      } catch (error) {
+        print("Received unformatted data: $data");
+      }
       // ws.add("Received: $data");
     }, onDone: () {
       print("User disconnected");
@@ -69,7 +79,7 @@ class WebSocketServer {
   String _generateId(int length) {
     final random = Random();
     const chars =
-        "`1234567890-=qwertyuiop[]asdfghjkl;zxcvbnm,./~!@#%^&*()_+QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?";
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
     final test = String.fromCharCodes(Iterable.generate(
       length,
       (index) => chars.codeUnitAt(random.nextInt(chars.length)),

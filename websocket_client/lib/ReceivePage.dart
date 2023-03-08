@@ -56,20 +56,27 @@ class ServerInfo extends StatefulWidget {
 }
 
 class _ServerInfoState extends State<ServerInfo> {
-  HttpRequest? _incomingRequest =
-      null;
+  HttpRequest? _incomingRequest = null;
 
   @override
   void initState() {
     super.initState();
+    try {
     widget.websocketServer.server.listen((request) async {
-      setState(() {
-        _incomingRequest = request;
-      });
-      print(
-          "CONNECTION FROM: ${request.connectionInfo?.remoteAddress.address}");
-      print(_incomingRequest!.connectionInfo!.remoteAddress.address);
+      if (!WebSocketTransformer.isUpgradeRequest(request)) {
+        setState(() {
+          _incomingRequest = request;
+        });
+        print(
+            "CONNECTION FROM: ${request.connectionInfo?.remoteAddress.address}");
+        print(_incomingRequest!.connectionInfo!.remoteAddress.address);
+      } else {
+        widget.websocketServer.upgradeConnection(request);
+      }
     });
+    } catch (error) {
+      print(error);
+    }
   }
 
   @override
@@ -79,6 +86,7 @@ class _ServerInfoState extends State<ServerInfo> {
         .copyWith(color: theme.colorScheme.onPrimaryContainer);
     var infoStyle =
         theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.primary);
+    var boldInfoStyle = infoStyle.copyWith(fontWeight: FontWeight.bold);
     return Column(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -114,36 +122,61 @@ class _ServerInfoState extends State<ServerInfo> {
         ),
         if (_incomingRequest != null)
           Card(
-            child: Column(
-              children: [
-                Text(
-                  "Incoming connection from: ${_incomingRequest?.connectionInfo?.remoteAddress.address}",
-                ),
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        _incomingRequest!.response.statusCode = HttpStatus.forbidden;
-                        _incomingRequest!.response.write("Connection rejected");
-                        _incomingRequest!.response.close();
-                        setState(() {
-                          _incomingRequest = null;
-                        });
-                      },
-                      child: Text("Reject"),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 400),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: "Incoming connection from: ",
+                          style: infoStyle,
+                        ),
+                        TextSpan(
+                          text: _incomingRequest
+                              ?.connectionInfo?.remoteAddress.address,
+                          style: boldInfoStyle,
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        widget.websocketServer.handleConnection(_incomingRequest!);
-                        setState(() {
-                          _incomingRequest = null;
-                        });
-                      },
-                      child: Text("Accept"),
+                    // "Incoming connection from: ${_incomingRequest?.connectionInfo?.remoteAddress.address}",
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            _incomingRequest!.response.statusCode =
+                                HttpStatus.forbidden;
+                            _incomingRequest!.response
+                                .write("Connection rejected");
+                            _incomingRequest!.response.close();
+                            setState(() {
+                              _incomingRequest = null;
+                            });
+                          },
+                          child: Text("Reject"),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            widget.websocketServer
+                                .handleConnection(_incomingRequest!);
+                            setState(() {
+                              _incomingRequest = null;
+                            });
+                          },
+                          child: Text("Accept"),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
       ],
