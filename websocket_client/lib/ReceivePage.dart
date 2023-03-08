@@ -57,23 +57,39 @@ class ServerInfo extends StatefulWidget {
 
 class _ServerInfoState extends State<ServerInfo> {
   HttpRequest? _incomingRequest = null;
+  final ValueNotifier<Map<String, dynamic>?> newMessage =
+      ValueNotifier<Map<String, dynamic>?>(null);
+  String? messageName = null;
+  String? messageExtension = null;
+  String? messageSize = null;
 
   @override
   void initState() {
     super.initState();
-    try {
-    widget.websocketServer.server.listen((request) async {
-      if (!WebSocketTransformer.isUpgradeRequest(request)) {
-        setState(() {
-          _incomingRequest = request;
-        });
-        print(
-            "CONNECTION FROM: ${request.connectionInfo?.remoteAddress.address}");
-        print(_incomingRequest!.connectionInfo!.remoteAddress.address);
-      } else {
-        widget.websocketServer.upgradeConnection(request);
-      }
+    newMessage.addListener(() {
+      print("new message!");
+      setState(() {
+        if (newMessage.value != null) {
+          messageName = newMessage.value!["name"];
+          messageExtension = newMessage.value!["extension"];
+          messageSize = newMessage.value!["size"];
+        }
+      });
     });
+
+    try {
+      widget.websocketServer.server.listen((request) async {
+        if (!WebSocketTransformer.isUpgradeRequest(request)) {
+          setState(() {
+            _incomingRequest = request;
+          });
+          print(
+              "CONNECTION FROM: ${request.connectionInfo?.remoteAddress.address}");
+          print(_incomingRequest!.connectionInfo!.remoteAddress.address);
+        } else {
+          widget.websocketServer.upgradeConnection(request, newMessage);
+        }
+      });
     } catch (error) {
       print(error);
     }
@@ -179,6 +195,14 @@ class _ServerInfoState extends State<ServerInfo> {
               ),
             ),
           ),
+        if (newMessage.value != null)
+          Column(
+            children: [
+              Text("Name: $messageName"),
+              Text("Extension: $messageExtension"),
+              Text("Size: $messageSize"),
+            ],
+          )
       ],
     );
   }

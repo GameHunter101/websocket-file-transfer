@@ -3,6 +3,8 @@ import "dart:convert";
 import "dart:io";
 import "dart:math";
 
+import "package:flutter/material.dart";
+
 class WebSocketServer {
   late final HttpServer server;
   String? senderId = null;
@@ -44,12 +46,12 @@ class WebSocketServer {
     request.response.close();
   }
 
-  void upgradeConnection(HttpRequest request) async {
+  void upgradeConnection(HttpRequest request, ValueNotifier<Map<String, dynamic>?> newMessage) async {
     final params = request.uri.queryParameters;
     if (params.keys.contains("id") && params["id"] == senderId) {
       if (WebSocketTransformer.isUpgradeRequest(request)) {
         WebSocket webSocket = await WebSocketTransformer.upgrade(request);
-        _handleWebSocket(webSocket);
+        _handleWebSocket(webSocket, newMessage);
       } else {
         request.response.statusCode = HttpStatus.badRequest;
         request.response.close();
@@ -61,10 +63,11 @@ class WebSocketServer {
     }
   }
 
-  void _handleWebSocket(WebSocket ws) {
+  void _handleWebSocket(WebSocket ws, ValueNotifier<Map<String, dynamic>?> newMessage) {
     ws.listen((data) {
       try {
-        print("Received formatted data: ${jsonDecode(data)}");
+        // print("Received formatted data: ${jsonDecode(data)}");
+        newMessage.value = jsonDecode(data);
       } catch (error) {
         print("Received unformatted data: $data");
       }
