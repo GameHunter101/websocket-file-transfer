@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:websocket_client/websocketServer.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,10 @@ class _ServerInfoState extends State<ServerInfo> {
   String? messageName = null;
   String? messageExtension = null;
   String? messageSize = null;
+  dynamic messageData = null;
+  Type? messageType = null;
+
+  late Uint8List fileBytes;
 
   @override
   void initState() {
@@ -69,10 +74,17 @@ class _ServerInfoState extends State<ServerInfo> {
     newMessage.addListener(() {
       print("new message!");
       setState(() {
+        print(newMessage.value);
         if (newMessage.value != null) {
           messageName = newMessage.value!["name"];
           messageExtension = newMessage.value!["extension"];
           messageSize = newMessage.value!["size"];
+          messageData = newMessage.value!["data"];
+          messageType = newMessage.value!["data"].runtimeType;
+          if (messageType != String) {
+            List<int> tempIntList = new List<int>.from(messageData);
+            fileBytes = Uint8List.fromList(tempIntList);
+          }
         }
       });
     });
@@ -201,6 +213,11 @@ class _ServerInfoState extends State<ServerInfo> {
               Text("Name: $messageName"),
               Text("Extension: $messageExtension"),
               Text("Size: $messageSize"),
+              if (messageType == String) 
+                Text("File: ${messageType != String}")
+              else 
+                Image.memory(fileBytes)
+              
             ],
           )
       ],

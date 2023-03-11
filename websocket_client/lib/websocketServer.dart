@@ -66,7 +66,7 @@ class WebSocketServer {
   void _handleWebSocket(WebSocket ws, ValueNotifier<Map<String, dynamic>?> newMessage) {
     ws.listen((data) {
       try {
-        // print("Received formatted data: ${jsonDecode(data)}");
+        print("Received formatted data: ${jsonDecode(data)["data"].runtimeType}");
         newMessage.value = jsonDecode(data);
       } catch (error) {
         print("Received unformatted data: $data");
