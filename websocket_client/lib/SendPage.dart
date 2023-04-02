@@ -1,7 +1,7 @@
 import "dart:io";
-import "dart:typed_data";
 
 import "package:file_picker/file_picker.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:websocket_client/main.dart";
@@ -293,9 +293,7 @@ class _TransferDataState extends State<TransferData> {
                                 };
                               });
                               widget.webSocket.sendMessage(
-                                textFormController.text,
-                                metadata,
-                              );
+                                  textFormController.text, metadata);
                               setState(() {
                                 metadata = {};
                               });
@@ -313,12 +311,9 @@ class _TransferDataState extends State<TransferData> {
                 child: TextButton.icon(
                   icon: Icon(Icons.send),
                   label: Text("Send"),
-                  onPressed: () {
+                  onPressed: () async {
                     if (widget.fileTransfer) {
-                      widget.webSocket.sendMessage(
-                        fileData,
-                        metadata,
-                      );
+                      widget.webSocket.sendMessage(fileData, metadata);
                       // webSocket.sendFile(fileMetaData, fileData);
                     } else {
                       setState(() {
@@ -328,10 +323,8 @@ class _TransferDataState extends State<TransferData> {
                           "size": "TEXT"
                         };
                       });
-                      widget.webSocket.sendMessage(
-                        textFormController.text,
-                        metadata,
-                      );
+                      widget.webSocket
+                          .sendMessage(textFormController.text, metadata);
                       // webSocket.sendText(textFormController.text);
                       textFormController.clear();
                     }

@@ -1,6 +1,6 @@
+import "dart:async";
 import "dart:convert";
 import "dart:io";
-import "dart:typed_data";
 
 import "package:path_provider/path_provider.dart";
 import "package:web_socket_channel/web_socket_channel.dart";
@@ -21,7 +21,8 @@ class WebSocketClient {
     addToHistory("text", message);
   }
 
-  void sendFile(Map<String, String> metadata, List<int> file) {
+  /* Future<void> sendFile(Map<String, String> metadata, List<int> file) {
+    final completer = Completer<void>();
     final encodedMetadata = utf8.encode(jsonEncode(metadata));
     ByteData metadataLength = ByteData(4);
     metadataLength.setUint32(0, encodedMetadata.length, Endian.little);
@@ -30,7 +31,9 @@ class WebSocketClient {
     final encodedFile = metaDataLengthBytes + encodedMetadata + file;
     _channel!.sink.add(encodedFile);
     addToHistory("file", metadata["name"]!);
-  }
+    completer.complete();
+    return completer.future;
+  } */
 
   void closeSink() {
     _channel!.sink.close();
@@ -50,7 +53,8 @@ class WebSocketClient {
   }
 
   void sendMessage(dynamic data, Map<String, String> metadata) async {
-    Map<String, dynamic> fullData = Map.from(metadata)..addAll({"data": data});
+    final fullData = Map<String, dynamic>.from(metadata)
+      ..addAll({"data": data});
     _channel!.sink.add(jsonEncode(fullData));
   }
 }

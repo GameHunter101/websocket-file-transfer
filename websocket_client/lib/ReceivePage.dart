@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:websocket_client/websocketServer.dart';
 import 'package:flutter/material.dart';
 
@@ -65,11 +68,20 @@ class _ServerInfoState extends State<ServerInfo> {
   String? messageSize = null;
   dynamic messageData = null;
   Type? messageType = null;
+  String? mimeType = null;
 
   GlobalKey columnKey = GlobalKey();
   late double imageHeight;
 
   late Uint8List fileBytes;
+
+  String insertCharAtIndex(String original, int index, String insert) {
+    if (index < 0 || index >= original.length) {
+      return original;
+    }
+
+    return original.substring(0, index) + insert + original.substring(index);
+  }
 
   @override
   void initState() {
@@ -86,6 +98,9 @@ class _ServerInfoState extends State<ServerInfo> {
           if (messageType != String) {
             List<int> tempIntList = new List<int>.from(messageData);
             fileBytes = Uint8List.fromList(tempIntList);
+            mimeType = lookupMimeType("$messageName.$messageType",
+                headerBytes: fileBytes);
+            print(mimeType);
           }
         }
       });
@@ -122,9 +137,7 @@ class _ServerInfoState extends State<ServerInfo> {
     late final RenderBox box;
     if (keyContext != null) {
       box = (keyContext.findRenderObject() as RenderBox);
-      print("screen height: $maxHeight");
       imageHeight = (maxHeight - box.size.height);
-      print("image height: $imageHeight");
     }
 
     return Container(
@@ -153,11 +166,11 @@ class _ServerInfoState extends State<ServerInfo> {
                               child: Column(
                             children: [
                               Text(
-                                "Ip: ${widget.snapshotData.address}",
+                                "IP: ${widget.snapshotData.address}",
                                 style: infoStyle,
                               ),
                               Text(
-                                "Port: ${widget.snapshotData.port}",
+                                "Port #: ${widget.snapshotData.port}",
                                 style: infoStyle,
                               ),
                             ],
@@ -209,6 +222,9 @@ class _ServerInfoState extends State<ServerInfo> {
                                 },
                                 child: Text("Reject"),
                               ),
+                              SizedBox(
+                                width: 10,
+                              ),
                               ElevatedButton(
                                 onPressed: () {
                                   widget.websocketServer
@@ -226,30 +242,101 @@ class _ServerInfoState extends State<ServerInfo> {
                     ),
                   ),
                 ),
-              // if (newMessage.value != null)
-              Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Text("Name: $messageName"),
-                  Text("Extension: $messageExtension"),
-                  Text("Size: $messageSize"),
-                  if (messageType == String)
-                    Text("File: ${messageType != String}")
-                ],
-              ),
+              if (newMessage.value != null)
+                Container(
+                  width: 400,
+                  child: Row(
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            "Name: ${insertCharAtIndex(messageName!, 12, " ")}",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: infoStyle,
+                          ),
+                          Text(
+                            "Type: ${messageExtension}",
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: infoStyle,
+                          ),
+                          Text(
+                            "Size: ${messageSize}",
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: infoStyle,
+                          ),
+                        ],
+                      ),
+                      if (messageType != String)
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 50,
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final result = await FilePicker.platform
+                                    .getDirectoryPath(
+                                        initialDirectory:
+                                            (await getApplicationDocumentsDirectory())
+                                                .path);
+                                if (result == null) {
+                                  return;
+                                }
+                                final file = File(
+                                    "$result\\$messageName.$messageExtension");
+                                file.create().then(
+                                    (value) => value.writeAsBytes(fileBytes));
+                              },
+                              icon: Icon(Icons.download),
+                              label: Text("Download file"),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
             ],
           ),
-          if (newMessage.value != null && messageType != String)
-            Padding(
-              padding: EdgeInsets.only(top: imageHeight.abs()*0.05, bottom: imageHeight.abs()*0.05),
-              child: Image.memory(
-                fileBytes,
-                height: imageHeight.abs() * 0.9,
-                fit: BoxFit.contain,
-              ),
+          if (newMessage.value != null &&
+              mimeType != null &&
+              mimeType!.contains("image"))
+            FutureBuilder(
+              future: _waitUntilDisplayed(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return CircularProgressIndicator();
+                }
+                final maxHeight = MediaQuery.of(context).size.height;
+                final keyContext = columnKey.currentContext;
+                late final RenderBox box;
+                if (keyContext != null) {
+                  box = (keyContext.findRenderObject() as RenderBox);
+                  imageHeight = maxHeight - box.size.height;
+                }
+                return Padding(
+                  padding: EdgeInsets.only(
+                    top: imageHeight.abs() * 0.05,
+                    bottom: imageHeight.abs() * 0.05,
+                  ),
+                  child: Image.memory(
+                    fileBytes,
+                    height: imageHeight.abs() * 0.9,
+                    fit: BoxFit.contain,
+                  ),
+                );
+              },
             )
         ],
       ),
     );
+  }
+
+  Future<void> _waitUntilDisplayed() async {
+    await Future.delayed(Duration.zero);
+    await Future(() {});
   }
 }
