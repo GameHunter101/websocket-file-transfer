@@ -18,8 +18,68 @@ class _SendPageState extends State<SendPage> {
   String? id = null;
   String? ip = null;
   final WebSocketClient webSocket = WebSocketClient();
+  String? addressError = null;
 
   final recipientAddressController = TextEditingController();
+
+  bool validateAddress(String input) {
+    final splitPort = input.split(":");
+    if (splitPort.length == 1) {
+      return false;
+    }
+    final port = splitPort[1];
+    final address = splitPort[0];
+    if (port.length == 0) {
+      return false;
+    }
+    if (address.length == 0) {
+      return false;
+    }
+    final splitAddress = address.split(".");
+    if (splitAddress.length != 4) {
+      return false;
+    }
+    for (var num in splitAddress) {
+      if (num.length == 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _establishConnection() async {
+    try {
+    if (validateAddress(recipientAddressController.text)) {
+      try {
+        setState(() {
+          addressError = null;
+        });
+        var response = await http
+            .get(Uri.parse("http://${recipientAddressController.text}"));
+        setState(() {
+          if (response.statusCode != HttpStatus.forbidden) {
+            id = response.body;
+            ip = recipientAddressController.text;
+          }
+        });
+        print("Response: ${id}");
+      } catch (e) {
+        setState(() {
+          addressError = "address not found";
+        });
+      }
+    } else {
+      setState(() {
+        addressError = "invalid address";
+      });
+    }
+    } catch (e) {
+      setState(() {
+        print(e.toString());
+        addressError = e.toString();
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -39,6 +99,8 @@ class _SendPageState extends State<SendPage> {
     var headerStyle = theme.textTheme.displayMedium!
         .copyWith(color: theme.colorScheme.onPrimaryContainer);
     var appState = context.watch<MainState>();
+    var infoStyle =
+        theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.primary);
 
     return Builder(builder: (context) {
       return Center(
@@ -75,6 +137,14 @@ class _SendPageState extends State<SendPage> {
                   ),
                 ),
               ),
+              if (addressError != null)
+                Text(
+                  "ERROR: $addressError",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: infoStyle,
+                ),
               if (ip != null && id != null)
                 Card(
                   child: Padding(
@@ -123,19 +193,6 @@ class _SendPageState extends State<SendPage> {
         ],
       ));
     });
-  }
-
-  void _establishConnection() async {
-    print("sending request...");
-    var response =
-        await http.get(Uri.parse("http://${recipientAddressController.text}"));
-    setState(() {
-      if (response.statusCode != HttpStatus.forbidden) {
-        id = response.body;
-        ip = recipientAddressController.text;
-      }
-    });
-    print("Response: ${id}");
   }
 }
 

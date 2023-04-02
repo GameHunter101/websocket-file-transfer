@@ -98,7 +98,7 @@ class _ServerInfoState extends State<ServerInfo> {
           if (messageType != String) {
             List<int> tempIntList = new List<int>.from(messageData);
             fileBytes = Uint8List.fromList(tempIntList);
-            mimeType = lookupMimeType("$messageName.$messageType",
+            mimeType = lookupMimeType("$messageName.$messageExtension",
                 headerBytes: fileBytes);
             print(mimeType);
           }
@@ -242,33 +242,36 @@ class _ServerInfoState extends State<ServerInfo> {
                     ),
                   ),
                 ),
-              if (newMessage.value != null)
+              if (newMessage.value != null && messageType != String)
                 Container(
                   width: 400,
                   child: Row(
                     children: [
-                      Column(
-                        children: [
-                          Text(
-                            "Name: ${insertCharAtIndex(messageName!, 12, " ")}",
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: infoStyle,
-                          ),
-                          Text(
-                            "Type: ${messageExtension}",
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: infoStyle,
-                          ),
-                          Text(
-                            "Size: ${messageSize}",
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: infoStyle,
-                          ),
-                        ],
+                      Container(
+                        width: 150,
+                        child: Column(
+                          children: [
+                            Text(
+                              "Name: ${insertCharAtIndex(messageName!, 12, " ")}",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: infoStyle,
+                            ),
+                            Text(
+                              "Type: ${messageExtension}",
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: infoStyle,
+                            ),
+                            Text(
+                              "Size: ${messageSize}",
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: infoStyle,
+                            ),
+                          ],
+                        ),
                       ),
                       if (messageType != String)
                         Row(
@@ -329,7 +332,11 @@ class _ServerInfoState extends State<ServerInfo> {
                   ),
                 );
               },
-            )
+            ),
+          if (messageType == String)
+            Text(
+              messageData,
+            ),
         ],
       ),
     );
